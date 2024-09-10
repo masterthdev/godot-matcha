@@ -74,6 +74,7 @@ func _init(options:={}):
 
 # Public methods
 func start() -> Error:
+	Utils.gen_id()
 	if _state != State.NEW:
 		push_error("Already started")
 		return Error.ERR_ALREADY_IN_USE
@@ -86,7 +87,7 @@ func start() -> Error:
 			push_error("Creating mesh failed")
 			return err
 	elif _type == "client":
-		var err := create_client(generate_unique_id())
+		var err := create_client(Utils.peer_id)
 		if err != OK:
 			push_error("Creating client failed")
 			return err
@@ -204,6 +205,7 @@ func _on_got_offer(offer: TrackerClient.Response, tracker_client: TrackerClient)
 	var answer_peer := MatchaPeer.create_answer_peer(offer.offer_id, offer.sdp)
 	var answer_rpc_id := 1 if _type == "client" else generate_unique_id()
 	answer_peer.id = offer.peer_id
+	if _type == "server": answer_rpc_id = offer.peer_id.to_int()
 
 	answer_peer.sdp_created.connect(self._send_answer_sdp.bind(answer_peer, tracker_client))
 	add_peer(answer_peer, answer_rpc_id)
